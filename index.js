@@ -9,21 +9,22 @@ const {
 } = require("@saltcorn/markup/tags");
 const { features } = require("@saltcorn/data/db/state");
 const File = require("@saltcorn/data/models/file");
-const headers =
-  features?.deep_public_plugin_serve
-    ? [
+const headers = features?.deep_public_plugin_serve
+  ? [
       {
-        script: `/plugins/public/ckeditor4${features?.version_plugin_serve_path
-          ? "@" + require("./package.json").version
-          : ""
-          }/ckeditor.js`,
+        script: `/plugins/public/ckeditor4${
+          features?.version_plugin_serve_path
+            ? "@" + require("./package.json").version
+            : ""
+        }/ckeditor.js`,
       },
     ]
-    : [
+  : [
       {
         script: "https://cdn.ckeditor.com/4.16.0/standard/ckeditor.js",
       },
     ];
+const public_user_role = features?.public_user_role || 10;
 
 const CKEditor4 = {
   type: "HTML",
@@ -31,7 +32,7 @@ const CKEditor4 = {
   blockDisplay: true,
   handlesTextStyle: true,
   configFields: async () => {
-    const dirs = File.allDirectories ? await File.allDirectories() : null
+    const dirs = File.allDirectories ? await File.allDirectories() : null;
     return [
       {
         name: "toolbar",
@@ -46,41 +47,43 @@ const CKEditor4 = {
         type: "Integer",
         default: 10,
       },
-      ...dirs ? [
-        {
-          name: "folder",
-          label: "Folder",
-          type: "String",
-          attributes: { options: dirs.map(d => d.path_to_serve) }
-        }
-      ] : []
-    ]
+      ...(dirs
+        ? [
+            {
+              name: "folder",
+              label: "Folder",
+              type: "String",
+              attributes: { options: dirs.map((d) => d.path_to_serve) },
+            },
+          ]
+        : []),
+    ];
   },
   run: (nm, v, attrs, cls) => {
     const toolbarGroups =
       attrs.reduced || attrs.toolbar === "Reduced"
         ? [
-          { name: "basicstyles", groups: ["basicstyles", "cleanup"] },
-          { name: "links", groups: ["links"] },
+            { name: "basicstyles", groups: ["basicstyles", "cleanup"] },
+            { name: "links", groups: ["links"] },
 
-          { name: "insert", groups: ["insert"] },
-          {
-            name: "paragraph",
-            groups: [
-              "list",
-              "indent",
-              "blocks",
-              "align",
-              "bidi",
-              "paragraph",
-            ],
-          },
+            { name: "insert", groups: ["insert"] },
+            {
+              name: "paragraph",
+              groups: [
+                "list",
+                "indent",
+                "blocks",
+                "align",
+                "bidi",
+                "paragraph",
+              ],
+            },
 
-          { name: "colors", groups: ["colors"] },
-          { name: "others", groups: ["others"] },
-        ]
+            { name: "colors", groups: ["colors"] },
+            { name: "others", groups: ["others"] },
+          ]
         : attrs.toolbar === "Document"
-          ? [
+        ? [
             { name: "basicstyles", groups: ["basicstyles", "cleanup"] },
 
             { name: "clipboard", groups: ["clipboard", "undo"] },
@@ -105,7 +108,7 @@ const CKEditor4 = {
             { name: "colors", groups: ["colors"] },
             { name: "others", groups: ["others"] },
           ]
-          : [
+        : [
             { name: "basicstyles", groups: ["basicstyles", "cleanup"] },
             { name: "links", groups: ["links"] },
 
@@ -137,8 +140,8 @@ const CKEditor4 = {
       attrs.reduced || attrs.toolbar === "Reduced"
         ? "uploadimage,dialogadvtab"
         : attrs.toolbar === "Document"
-          ? "uploadimage,colorbutton,font,justify,dialogadvtab,colordialog"
-          : "uploadimage,dialogadvtab";
+        ? "uploadimage,colorbutton,font,justify,dialogadvtab,colordialog"
+        : "uploadimage,dialogadvtab";
     return div(
       {
         class: [cls],
@@ -159,7 +162,11 @@ var editor = CKEDITOR.replace( '${text(nm)}', {
   ${attrs.disabled ? `readOnly: true,` : ``}
   height: "${attrs.height || 10}em",
   toolbarGroups: ${JSON.stringify(toolbarGroups)},
-  ${attrs.toolbar === "Document" ? `removeButtons: '',` : `removeButtons: 'Subscript,Superscript',`}
+  ${
+    attrs.toolbar === "Document"
+      ? `removeButtons: '',`
+      : `removeButtons: 'Subscript,Superscript',`
+  }
   disallowedContent: 'img{width,height}',
   extraAllowedContent: 'img[width,height]'
 } );
@@ -180,8 +187,12 @@ editor.on( 'fileUploadRequest', function( evt ) {
 
   xhr.open( 'POST', fileLoader.uploadUrl, true );
   formData.append( 'file', fileLoader.file, fileLoader.fileName );
-  formData.append( 'min_role_read',10 );
-  ${attrs.folder ? `formData.append( 'folder', ${JSON.stringify(attrs.folder)} );` : ''}
+  formData.append( 'min_role_read',${public_user_role} );
+  ${
+    attrs.folder
+      ? `formData.append( 'folder', ${JSON.stringify(attrs.folder)} );`
+      : ""
+  }
   xhr.setRequestHeader( 'CSRF-Token', _sc_globalCsrf );
   xhr.setRequestHeader( 'X-Requested-With', 'XMLHttpRequest' );
   fileLoader.xhr.send( formData );
