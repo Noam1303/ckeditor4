@@ -51,7 +51,7 @@ const CKEditor4 = {
         ? [
             {
               name: "folder",
-              label: "Folder",
+              label: "Folder for uploaded media files",
               type: "String",
               attributes: { options: dirs.map((d) => d.path_to_serve) },
             },
