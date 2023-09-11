@@ -19,6 +19,11 @@ body {
   margin: 20px;
 }
 
+p {
+  margin-block-start: 0.15rem;
+  margin-block-end: 0.6rem;
+}
+
 .cke_editable {
   font-size: 15px;
   line-height: 1.6;
