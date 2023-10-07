@@ -142,6 +142,8 @@ const CKEditor4 = {
         : attrs.toolbar === "Document"
         ? "uploadimage,colorbutton,font,justify,dialogadvtab,colordialog"
         : "uploadimage,dialogadvtab";
+    const rndcls = `cke${Math.floor(Math.random() * 16777215).toString(16)}`;
+
     return div(
       {
         class: [cls],
@@ -151,12 +153,13 @@ const CKEditor4 = {
           name: text(nm),
           id: `input${text(nm)}`,
           rows: 10,
+          class: rndcls,
         },
         text(v || "")
       ),
       script(
         domReady(`
-var editor = CKEDITOR.replace( '${text(nm)}', {
+var editor = CKEDITOR.replace( $('.${rndcls}')[0], {
   extraPlugins: ${JSON.stringify(extraPlugins)},
   imageUploadUrl: '/files/upload',
   ${attrs.disabled ? `readOnly: true,` : ``}
