@@ -216,6 +216,9 @@ editor.on('fileUploadResponse', function( evt ) {
   evt.data.fileName=r.success.filename;
   evt.data.url=r.success.url;
 });
+$('#input${text(nm)}').on('set_form_field', (e)=>{
+  editor.setData(e.target.value)
+})
       `)
       )
     );
