@@ -53,7 +53,9 @@ const CKEditor4 = {
               name: "folder",
               label: "Folder for uploaded media files",
               type: "String",
-              attributes: { options: dirs.map((d) => d.path_to_serve) },
+              attributes: {
+                options: [...dirs.map((d) => d.path_to_serve), "Base64 encode"],
+              },
             },
           ]
         : []),
@@ -136,12 +138,14 @@ const CKEditor4 = {
             { name: "colors", groups: ["colors"] },
             { name: "others", groups: ["others"] },
           ];
+    const imgPlugin =
+      attrs.folder === "Base64 encode" ? "base64image" : "uploadimage";
     const extraPlugins =
       attrs.reduced || attrs.toolbar === "Reduced"
-        ? "uploadimage,dialogadvtab"
+        ? `${imgPlugin},dialogadvtab`
         : attrs.toolbar === "Document"
-        ? "uploadimage,colorbutton,font,justify,dialogadvtab,colordialog"
-        : "uploadimage,dialogadvtab";
+        ? `${imgPlugin},colorbutton,font,justify,dialogadvtab,colordialog`
+        : `${imgPlugin},dialogadvtab`;
     const rndcls = `cke${Math.floor(Math.random() * 16777215).toString(16)}`;
 
     return div(
@@ -161,7 +165,7 @@ const CKEditor4 = {
         domReady(`
 var editor = CKEDITOR.replace( $('.${rndcls}')[0], {
   extraPlugins: ${JSON.stringify(extraPlugins)},
-  imageUploadUrl: '/files/upload',
+  ${attrs.folder === "Base64 encode" ? "" : `imageUploadUrl: '/files/upload',`}
   ${attrs.disabled ? `readOnly: true,` : ``}
   height: "${attrs.height || 10}em",
   toolbarGroups: ${JSON.stringify(toolbarGroups)},
@@ -182,8 +186,15 @@ CKEDITOR.on('dialogDefinition', function (ev) {
     addCssClass['default'] = 'table-inner-grid';
   }
 });
-
-editor.on( 'fileUploadRequest', function( evt ) {
+let ckOnChange = ()=>{
+  editor.updateElement();
+  $('textarea#input${text(nm)}').closest('form').trigger('change');
+}
+editor.on('change', $.debounce ? $.debounce(ckOnChange, 500, null,true) : ckOnChange);
+${
+  attrs.folder === "Base64 encode"
+    ? ""
+    : `editor.on( 'fileUploadRequest', function( evt ) {
   var fileLoader = evt.data.fileLoader,
       formData = new FormData(),
       xhr = fileLoader.xhr;
@@ -203,11 +214,6 @@ editor.on( 'fileUploadRequest', function( evt ) {
   // Prevented the default behavior.
   evt.stop();
 })
-let ckOnChange = ()=>{
-  editor.updateElement();
-  $('textarea#input${text(nm)}').closest('form').trigger('change');
-}
-editor.on('change', $.debounce ? $.debounce(ckOnChange, 500, null,true) : ckOnChange);
 editor.on('fileUploadResponse', function( evt ) {
   evt.stop();
   var data = evt.data,
@@ -218,7 +224,10 @@ editor.on('fileUploadResponse', function( evt ) {
   evt.data.uploaded=1;
   evt.data.fileName=r.success.filename;
   evt.data.url=r.success.url;
-});
+});`
+}
+
+
 $('#input${text(nm)}').on('set_form_field', (e)=>{
   editor.setData(e.target.value)
 })
