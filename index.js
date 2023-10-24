@@ -47,6 +47,23 @@ const CKEditor4 = {
         type: "Integer",
         default: 10,
       },
+      {
+        name: "autogrow",
+        label: "Auto-grow",
+        type: "Bool",
+      },
+      {
+        name: "minheight",
+        label: "Min height (px)",
+        type: "Integer",
+        showIf: { autogrow: true },
+      },
+      {
+        name: "maxheight",
+        label: "Max height (px)",
+        type: "Integer",
+        showIf: { autogrow: true },
+      },
       ...(dirs
         ? [
             {
@@ -138,14 +155,15 @@ const CKEditor4 = {
             { name: "colors", groups: ["colors"] },
             { name: "others", groups: ["others"] },
           ];
-    const imgPlugin =
+    let varPlugin =
       attrs.folder === "Base64 encode" ? "base64image" : "uploadimage";
+    if (attrs.autogrow) varPlugin += ",autogrow";
     const extraPlugins =
       attrs.reduced || attrs.toolbar === "Reduced"
-        ? `${imgPlugin},dialogadvtab`
+        ? `${varPlugin},dialogadvtab`
         : attrs.toolbar === "Document"
-        ? `${imgPlugin},colorbutton,font,justify,dialogadvtab,colordialog`
-        : `${imgPlugin},dialogadvtab`;
+        ? `${varPlugin},colorbutton,font,justify,dialogadvtab,colordialog`
+        : `${varPlugin},dialogadvtab`;
     const rndcls = `cke${Math.floor(Math.random() * 16777215).toString(16)}`;
 
     return div(
@@ -167,12 +185,17 @@ var editor = CKEDITOR.replace( $('.${rndcls}')[0], {
   extraPlugins: ${JSON.stringify(extraPlugins)},
   ${attrs.folder === "Base64 encode" ? "" : `imageUploadUrl: '/files/upload',`}
   ${attrs.disabled ? `readOnly: true,` : ``}
-  height: "${attrs.height || 10}em",
   toolbarGroups: ${JSON.stringify(toolbarGroups)},
   ${
     attrs.toolbar === "Document"
       ? `removeButtons: '',`
       : `removeButtons: 'Subscript,Superscript',`
+  }
+  ${
+    attrs.autogrow
+      ? `autoGrow_minHeight: ${attrs.minheight},
+         autoGrow_maxHeight:${attrs.maxheight},`
+      : `height: "${attrs.height || 10}em",`
   }
   disallowedContent: 'img{width,height}',
   extraAllowedContent: 'img[width,height]'
