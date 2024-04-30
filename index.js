@@ -9,6 +9,7 @@ const {
 } = require("@saltcorn/markup/tags");
 const { features } = require("@saltcorn/data/db/state");
 const File = require("@saltcorn/data/models/file");
+const User = require("@saltcorn/data/models/user");
 const headers = features?.deep_public_plugin_serve
   ? [
       {
@@ -33,6 +34,8 @@ const CKEditor4 = {
   handlesTextStyle: true,
   configFields: async () => {
     const dirs = File.allDirectories ? await File.allDirectories() : null;
+    const roles = await User.get_roles();
+
     return [
       {
         name: "toolbar",
@@ -76,6 +79,12 @@ const CKEditor4 = {
             },
           ]
         : []),
+      {
+        name: "min_role_read",
+        label: "Min role read files",
+        input_type: "select",
+        options: roles.map((r) => ({ value: r.id, label: r.role })),
+      },
     ];
   },
   run: (nm, v, attrs, cls) => {
@@ -224,7 +233,9 @@ ${
 
   xhr.open( 'POST', fileLoader.uploadUrl, true );
   formData.append( 'file', fileLoader.file, fileLoader.fileName );
-  formData.append( 'min_role_read',${public_user_role} );
+  formData.append( 'min_role_read',${
+    attrs?.min_role_read || public_user_role
+  } );
   ${
     attrs.folder
       ? `formData.append( 'folder', ${JSON.stringify(attrs.folder)} );`
