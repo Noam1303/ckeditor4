@@ -280,4 +280,5 @@ module.exports = {
   plugin_name: "ckeditor4",
   headers,
   dependencies,
+  ready_for_mobile: true,
 };
