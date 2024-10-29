@@ -1,6 +1,6 @@
 {
   "name": "@saltcorn/ckeditor4",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "CKEditor4 editor for HTML fields",
   "main": "index.js",
   "dependencies": {
